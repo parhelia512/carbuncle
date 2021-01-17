@@ -559,11 +559,25 @@ mrb_init_carbuncle_filesystem(mrb_state *mrb)
   mrb_define_const(mrb, file, "PATH_SEPARATOR", SEPARATOR);
 }
 
+#ifdef __EMSCRIPTEN__
+  #include <emscripten/emscripten.h>
+  void mrb_carbuncle_fetch_file(const char* filename) {
+    char* host = emscripten_run_script_string("/.*(?=\\/\\w*)/.exec(window.location.href).join() + '/'");
+    char* endpoint = malloc(strlen(host) + strlen(filename) + 1);
+	  strcpy(endpoint, host);
+	  strcat(endpoint, filename);
+    emscripten_wget(endpoint, filename);
+  }
+#endif
+
 char *
 mrb_carbuncle_load_file(mrb_state *mrb, const char *filename, size_t *size)
 {
   char *result;
   PHYSFS_File *file;
+  #ifdef __EMSCRIPTEN__
+    mrb_carbuncle_fetch_file(filename);
+  #endif
   file = PHYSFS_openRead(filename);
   if (!file) { { raise_physfs_error(mrb, "open"); } }
   *size = PHYSFS_fileLength(file);

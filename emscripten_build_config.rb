@@ -51,9 +51,11 @@ MRuby::Build.new do |conf|
 end
 
 MRuby::CrossBuild.new('web') do |conf|
-  conf.toolchain :clang
-
-  emscripten_flags = [
+  toolchain :clang
+  conf.gembox 'default'
+  conf.cc.command = 'emcc'
+  conf.cxx.command = 'emcc'
+  conf.cc.flags = [
     '-s ASYNCIFY=1',
     '-s WASM=0',
     '-s USE_GLFW=3',
@@ -61,19 +63,19 @@ MRuby::CrossBuild.new('web') do |conf|
     '-s FORCE_FILESYSTEM=1',
     '-O3'
   ]
-
-  conf.gembox 'default'
-  conf.cc.command = 'emcc'
-  conf.cxx.command = 'em++'
-  conf.archiver.command = 'emar'
-  conf.cc.flags += emscripten_flags
-  conf.cxx.flags += emscripten_flags
   conf.exts.executable = '.html'
   conf.linker.command = 'emcc'
-  conf.linker.flags = emscripten_flags
+  conf.linker.flags = [
+    '-s ASYNCIFY=1',
+    '-s WASM=0',
+    '-s USE_GLFW=3',
+    '--use-preload-plugins',
+    '-s FORCE_FILESYSTEM=1',
+    '-O3'
+  ]
   
-
+  conf.archiver.command = 'emar'
   add_core_gems(conf)
   add_external_gems(conf)
-  add_carbuncle_gems(conf)  
+  add_carbuncle_gems(conf) 
 end
